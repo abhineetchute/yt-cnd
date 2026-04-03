@@ -30,8 +30,10 @@ def main():
     parser.add_argument("-o", "--output", default=default_downloads, help="Output folder")
     parser.add_argument("-a", "--audio", action="store_true", help="Audio only (WAV)")
     parser.add_argument("--max", action="store_true", help="4K/8K resolution")
-    # Added a flag to adjust the limit if you ever want to change it on the fly
     parser.add_argument("--limit", default="5M", help="Rate limit (e.g. 5M, 10M). Default is 5M.")
+    
+    # NEW: Cookies flag to bypass bot detection
+    parser.add_argument("--cookies", help="Browser to pull cookies from (e.g., chrome, safari, brave, firefox)")
     
     args = parser.parse_args()
     url = args.url
@@ -56,21 +58,23 @@ def main():
 
     os.makedirs(output_path, exist_ok=True)
 
-    # UPDATED: Template uses %(playlist)s for better naming
     if download_playlist:
         out_template = os.path.join(output_path, '%(playlist)s', '%(title)s.%(ext)s')
     else:
         out_template = os.path.join(output_path, '%(title)s.%(ext)s')
 
-    # UPDATED: Added 'ratelimit' to prevent Wi-Fi crashes
+    # UPDATED: Added 'cookiesfrombrowser' to the options
     ydl_opts = {
         'retries': 15,
         'fragment_retries': 15,
         'socket_timeout': 60,
-        'ratelimit': args.limit, # Limits download speed to save your Wi-Fi
+        'ratelimit': args.limit,
         'outtmpl': out_template,
         'noplaylist': not download_playlist,
     }
+
+    if args.cookies:
+        ydl_opts['cookiesfrombrowser'] = (args.cookies,)
 
     if args.audio:
         ydl_opts.update({
@@ -93,13 +97,15 @@ def main():
 
     print(f"\n🎬 yt-CND Initializing...")
     print(f"🚀 Speed Limit: {args.limit}/s")
+    if args.cookies:
+        print(f"🍪 Using cookies from: {args.cookies}")
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
         print("\n✅ Download complete!")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n❌ yt-CND encountered an error: {e}")
 
 if __name__ == "__main__":
     main()
