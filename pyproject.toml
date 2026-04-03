@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yt-cnd"
+version = "1.0.0"
+description = "A fast, robust 1080p YouTube downloader for documentary filmmakers."
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "yt-dlp",
+]
+
+[project.scripts]
+# This line tells pip: "When the user types 'yt-cnd' in the terminal, 
+# run the 'main' function inside yt_cnd/cli.py"
+yt-cnd = "yt_cnd.cli:main"

@@ -1,0 +1,2 @@
+[console_scripts]
+yt-cnd = yt_cnd.cli:main
