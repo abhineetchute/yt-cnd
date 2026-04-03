@@ -1,4 +1,3 @@
-```markdown
 # yt-CND: The Filmmaker's YouTube Downloader
 
 A lightning-fast, robust command-line tool designed to download high-quality video and audio from YouTube. Built specifically for video editors, it natively integrates SponsorBlock to automatically cut out baked-in ads and perfectly synchronizes highest-quality streams for non-linear editors (NLEs) like Premiere Pro.
@@ -6,6 +5,7 @@ A lightning-fast, robust command-line tool designed to download high-quality vid
 ## ✨ Features
 * **Smart Quality:** Defaults to max 1080p to prevent accidental multi-gigabyte 4K downloads, with a `--max` flag to override when archival 4K/8K resolution is needed.
 * **Lossless Audio:** One-flag extraction of pristine, uncompressed WAV audio (avoids timeline drift caused by MP3 variable bitrates).
+* **Interactive Playlist Detection:** If you paste a link that contains a playlist, the tool will automatically ask if you want to download the single video or the entire playlist. Playlists are automatically saved into their own named folders.
 * **SponsorBlock Integration:** Automatically detects and strips sponsored segments out of the final video file.
 * **Smart Defaults:** Drops files directly into your system's `Downloads` folder automatically. Cross-platform compatible (macOS & Windows).
 
@@ -29,7 +29,7 @@ winget install OpenJS.NodeJS
 To install `yt-CND` globally on your machine directly from GitHub, run:
 
 ```bash
-pip install git+[https://github.com/YOUR_GITHUB_USERNAME/yt-cnd.git](https://github.com/YOUR_GITHUB_USERNAME/yt-cnd.git)
+pip install git+https://github.com/abhineetchute/yt-cnd.git
 ```
 *(If installing from source locally, navigate to the project directory and run `pip install .`)*
 
@@ -55,6 +55,12 @@ yt-cnd "<YOUR_YOUTUBE_URL>" --max
 **Custom Output Directory:**
 ```bash
 yt-cnd "<YOUR_YOUTUBE_URL>" -o /path/to/custom/folder
+```
+
+**Download a Playlist:**
+(Automatically detects the playlist, asks for confirmation, and creates a sub-folder)
+```text
+yt-cnd "<YOUR_YOUTUBE_PLAYLIST_URL>"
 ```
 
 ## 📝 Disclaimer
