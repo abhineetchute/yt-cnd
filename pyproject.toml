@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yt-cnd"
-version = "1.0.2"
+version = "1.0.4"
 description = "A fast, robust 1080p YouTube downloader for documentary filmmakers."
 readme = "README.md"
 requires-python = ">=3.7"
