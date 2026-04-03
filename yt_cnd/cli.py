@@ -66,15 +66,15 @@ def main():
 
     os.makedirs(output_path, exist_ok=True)
     
-    # Template logic
     if download_playlist:
         out_template = os.path.join(output_path, '%(playlist_title,playlist)s', '%(title)s.%(ext)s')
     else:
         out_template = os.path.join(output_path, '%(title)s.%(ext)s')
 
-    # Logic for speed limit
     rate_limit = parse_limit(args.limit)
 
+    # THE FIX FOR 403 FORBIDDEN & SABR:
+    # We add 'extractor_args' to force the use of mobile clients which bypass the new web-blocks.
     ydl_opts = {
         'retries': 15,
         'fragment_retries': 15,
@@ -82,10 +82,16 @@ def main():
         'ratelimit': rate_limit,
         'outtmpl': out_template,
         'noplaylist': not download_playlist,
-        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
         'javascript_runtimes': ['deno', 'node'],
         'allow_unsecure_tools': True,
         'remote_components': ['ejs:github'],
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android', 'ios', 'web'],
+                'skip': ['dash', 'hls']
+            }
+        },
     }
 
     if args.cookies:
