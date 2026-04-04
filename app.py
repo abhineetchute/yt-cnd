@@ -1,79 +1,53 @@
 import streamlit as st
-import os
-import yt_dlp
-import tempfile
-import shutil
+import requests
 
-# Page Setup
 st.set_page_config(page_title="yt-CND Downloader", page_icon="🎬", layout="centered")
 st.title("🎬 yt-CND Downloader")
-st.markdown("Paste a YouTube link below to get clean, proxy-ready assets.")
+st.markdown("Cloud-based proxy acquisition network.")
 
-# UI Inputs
 url = st.text_input("YouTube URL:", placeholder="https://www.youtube.com/watch?v=...")
 
-col1, col2 = st.columns(2)
-with col1:
-    format_type = st.selectbox("Format", ["Video (1080p MP4)", "Video (Max Quality)", "Audio Only (WAV)"])
-with col2:
-    browser_cookie = st.selectbox("Bypass Bot Block?", ["None", "Chrome", "Safari", "Firefox"])
+format_type = st.selectbox("Format", ["Video (1080p)", "Audio Only (MP3/WAV)"])
 
-# Logic
 if st.button("🚀 Process Download", use_container_width=True):
     if not url:
         st.error("Please enter a URL.")
     else:
-        # Create a temporary folder to hold the file while it processes
-        temp_dir = tempfile.mkdtemp()
-        
-        with st.status("Processing Video... (This may take a minute)", expanded=True) as status:
+        with st.status("Acquiring secure download link...", expanded=True) as status:
             try:
-                # 1. Configure Options
-                st.write("Initializing secure connection...")
-                out_template = os.path.join(temp_dir, '%(title)s.%(ext)s')
-                
-                ydl_opts = {
-                    'outtmpl': out_template,
-                    'noplaylist': True, # Keep it to single videos for the web UI to avoid ZIP complexities
-                    'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-                    'javascript_runtimes': ['node'], # Node is easiest for Docker
-                    'allow_unsecure_tools': True,
-                    'remote_components': ['ejs:github'],
-                    'extractor_args': {'youtube': {'player_client': ['android', 'ios', 'web'], 'skip': ['dash', 'hls']}},
+                # Setup the request to the Cobalt API network
+                api_url = "https://api.cobalt.tools/api/json"
+                headers = {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                }
+                payload = {
+                    "url": url,
+                    "vQuality": "1080",
+                    "filenamePattern": "classic"
                 }
 
-                if browser_cookie != "None":
-                    ydl_opts['cookiesfrombrowser'] = (browser_cookie.lower(),)
+                if "Audio" in format_type:
+                    payload["isAudioOnly"] = True
 
-                if format_type == "Audio Only (WAV)":
-                    ydl_opts.update({'format': 'bestaudio/best', 'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'wav'}]})
-                elif format_type == "Video (Max Quality)":
-                    ydl_opts.update({'format': 'bestvideo+bestaudio', 'merge_output_format': 'mp4'})
+                # Send request
+                response = requests.post(api_url, json=payload, headers=headers)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("status") == "stream" or data.get("status") == "redirect":
+                        download_url = data.get("url")
+                        status.update(label="✅ Link Generated!", state="complete", expanded=False)
+                        
+                        st.success("File is ready! Click below to download directly to your machine.")
+                        # Provide a direct clickable link to the user
+                        st.markdown(f'<a href="{download_url}" target="_blank"><button style="width:100%; padding:10px; background-color:#ff4b4b; color:white; border:none; border-radius:5px; cursor:pointer;">⬇️ Download File</button></a>', unsafe_allow_html=True)
+                    else:
+                        status.update(label="❌ API Error", state="error")
+                        st.error("The acquisition network couldn't process this link.")
                 else:
-                    ydl_opts.update({'format': 'bestvideo[height<=1080]+bestaudio', 'merge_output_format': 'mp4'})
-
-                # 2. Download the file
-                st.write("Downloading and merging streams via FFmpeg...")
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info_dict = ydl.extract_info(url, download=True)
-                    # Get the exact filename yt-dlp generated
-                    downloaded_file = ydl.prepare_filename(info_dict)
-                    
-                    if format_type == "Audio Only (WAV)":
-                        downloaded_file = downloaded_file.rsplit('.', 1)[0] + '.wav'
-
-                status.update(label="✅ Ready for Download!", state="complete", expanded=False)
-
-                # 3. Provide the Download Button to the User's Browser
-                with open(downloaded_file, "rb") as file:
-                    st.success("Success! Click below to save to your computer.")
-                    st.download_button(
-                        label="⬇️ Download File",
-                        data=file,
-                        file_name=os.path.basename(downloaded_file),
-                        mime="video/mp4" if "Video" in format_type else "audio/wav",
-                        use_container_width=True
-                    )
+                    status.update(label="❌ Network Error", state="error")
+                    st.error("Failed to connect to the acquisition network.")
             
             except Exception as e:
                 status.update(label="❌ Error Encountered", state="error")
