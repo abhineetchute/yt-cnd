@@ -20,6 +20,8 @@ if st.button("🚀 Process Download", use_container_width=True):
                 headers = {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
+                    # THE FIX: Spoof a real Mac browser so the API doesn't block the Python script
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
                 }
                 payload = {
                     "url": url,
@@ -40,14 +42,15 @@ if st.button("🚀 Process Download", use_container_width=True):
                         status.update(label="✅ Link Generated!", state="complete", expanded=False)
                         
                         st.success("File is ready! Click below to download directly to your machine.")
-                        # Provide a direct clickable link to the user
                         st.markdown(f'<a href="{download_url}" target="_blank"><button style="width:100%; padding:10px; background-color:#ff4b4b; color:white; border:none; border-radius:5px; cursor:pointer;">⬇️ Download File</button></a>', unsafe_allow_html=True)
                     else:
                         status.update(label="❌ API Error", state="error")
-                        st.error("The acquisition network couldn't process this link.")
+                        st.error(f"The acquisition network couldn't process this link. Response: {data}")
                 else:
                     status.update(label="❌ Network Error", state="error")
-                    st.error("Failed to connect to the acquisition network.")
+                    # NEW: Exact error reporting so we know exactly why it failed
+                    st.error(f"Connection blocked by API. (Status Code: {response.status_code})")
+                    st.write("Server Response details:", response.text)
             
             except Exception as e:
                 status.update(label="❌ Error Encountered", state="error")
