@@ -37,16 +37,38 @@ class CleanLogger:
         pass # Ignore all debug text
         
     def warning(self, msg):
-        pass # Ignore all messy warnings (like SABR format skips)
+        pass # Ignore all messy warnings
         
     def error(self, msg):
-        # Intercept scary bot-blocks and provide a friendly instruction to the editor
+        # Intercept scary bot-blocks and provide a friendly instruction
         if "Sign in" in msg or "bot" in msg.lower() or "403" in msg:
             print(f"\n🛑 YouTube is asking for verification for this video.")
             print(f"👉 Fix: Just add '--cookies chrome' to the end of your command!")
         else:
-            # Swallow other minor internal errors to keep the terminal clean
             pass 
+
+def progress_hook(d):
+    """Custom satisfying progress bar that overrides the quiet mode."""
+    if d['status'] == 'downloading':
+        percent = d.get('_percent_str', 'N/A').strip()
+        speed = d.get('_speed_str', 'N/A').strip()
+        eta = d.get('_eta_str', 'N/A').strip()
+        filename = os.path.basename(d.get('filename', 'Unknown'))
+        
+        # Truncate filename if it's too long to keep the terminal clean
+        if len(filename) > 35:
+            filename = filename[:32] + "..."
+            
+        # Use \r to overwrite the same line over and over for a smooth progress feel
+        sys.stdout.write(f'\r🔄 Fetching: {filename} | {percent} | 🚀 {speed} | ⏳ ETA: {eta}')
+        sys.stdout.flush()
+        
+    elif d['status'] == 'finished':
+        # Clear the progress line and print a clean success message
+        sys.stdout.write('\r' + ' ' * 100 + '\r')
+        sys.stdout.flush()
+        filename = os.path.basename(d.get('filename', 'Unknown'))
+        print(f"✨ Downloaded: {filename}")
 
 def main():
     check_dependencies()
@@ -90,7 +112,6 @@ def main():
 
     rate_limit = parse_limit(args.limit)
 
-    # Base configuration
     ydl_opts = {
         'retries': 15,
         'fragment_retries': 15,
@@ -108,11 +129,12 @@ def main():
                 'skip': ['dash', 'hls']
             }
         },
-        # --- THE SILENCE FIX ---
-        'quiet': True,             # Turns off the massive wall of text
-        'no_warnings': True,       # Hides all warnings
-        'noprogress': False,       # Keeps the actual download progress bar!
-        'logger': CleanLogger(),   # Uses our custom logger
+        # UI Overrides
+        'quiet': True,
+        'no_warnings': True,
+        'noprogress': True, # Suppress default yt-dlp bar
+        'logger': CleanLogger(),
+        'progress_hooks': [progress_hook], # Use our custom satisfying bar
     }
 
     if args.cookies:
@@ -139,9 +161,8 @@ def main():
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
-        print("\n✅ Download and SponsorBlock processing complete!")
+        print("\n✅ All processing complete!")
     except Exception:
-        # We let the custom logger handle printing the specific error, so we don't double-print a stack trace here.
         pass
 
 if __name__ == "__main__":
