@@ -1,68 +1,92 @@
-# yt-CND: The Filmmaker's YouTube Downloader
+# yt-CND (Docu Editor's Youtube Downloader)
 
-A lightning-fast, robust command-line tool designed to download high-quality video and audio from YouTube. Built specifically for video editors, it natively integrates SponsorBlock to automatically cut out baked-in ads and perfectly synchronizes highest-quality streams for non-linear editors (NLEs) like Premiere Pro.
+A lightning-fast, robust YouTube downloader designed specifically for filmmakers, documentarians, and video editors who need clean, high-quality assets without the hassle of ads, terminal clutter, or bot blocks.
 
 ## ✨ Features
-* **Smart Quality:** Defaults to max 1080p to prevent accidental multi-gigabyte 4K downloads, with a `--max` flag to override when archival 4K/8K resolution is needed.
-* **Lossless Audio:** One-flag extraction of pristine, uncompressed WAV audio (avoids timeline drift caused by MP3 variable bitrates).
-* **Interactive Playlist Detection:** If you paste a link that contains a playlist, the tool will automatically ask if you want to download the single video or the entire playlist. Playlists are automatically saved into their own named folders.
-* **SponsorBlock Integration:** Automatically detects and strips sponsored segments out of the final video file.
-* **Smart Defaults:** Drops files directly into your system's `Downloads` folder automatically. Cross-platform compatible (macOS & Windows).
+* **1080p Standard:** Defaults to 1080p MP4—the "sweet spot" for proxy editing and high-quality references.
+* **Smart Playlist Detection:** Automatically identifies playlists and offers an interactive choice to download the entire set or just the current video.
+* **Automatic Organization:** Playlists are automatically saved into their own named sub-folders to keep your project directories clean.
+* **Exact Filenames:** Saves files using the exact YouTube title. No random strings or numbers—just clean metadata for your project bins.
+* **Bandwidth Throttling:** Includes a built-in rate limit to prevent crashing home/studio Wi-Fi during large batch downloads (Default: 5MB/s).
+* **Bot-Block Bypass:** Integrates browser cookies and advanced JS runtimes (**Deno/Node**) to solve YouTube's "Sign in to confirm" errors using aggressive mobile spoofing.
+* **SponsorBlock Integration:** Automatically strips out sponsors, intros, and self-promotions to give you clean, edit-ready footage.
+* **Cinematic UI:** Hides chaotic backend terminal logs and displays a clean, single-line updating progress bar.
 
-## 🛠️ Prerequisites
+---
 
-`yt-CND` requires two system-level libraries to merge streams and decrypt bot protection.
+## 🛠 Installation
 
-**For macOS (via Homebrew):**
-```bash
-brew install ffmpeg node
-```
+We have completely automated the setup process for fresh machines. You do not need to manually configure Homebrew, Python virtual environments, Node, or FFmpeg. 
 
-**For Windows (via Winget in PowerShell):**
-```powershell
-winget install ffmpeg
-winget install OpenJS.NodeJS
-```
-
-## 📦 Installation
-
-To install `yt-CND` globally on your machine directly from GitHub, run:
+### The 1-Line Setup
+Open your Mac's **Terminal** app, paste this exact command, and hit Enter:
 
 ```bash
-pip install git+https://github.com/abhineetchute/yt-cnd.git
+curl -sSL https://raw.githubusercontent.com/abhineetchute/yt-cnd/main/install.sh | bash
 ```
-*(If installing from source locally, navigate to the project directory and run `pip install .`)*
 
-## 🚀 Usage
+*Note: The script will safely install missing dependencies in the background, isolate the Python environment so it doesn't break your Mac, and link the command globally. You may be prompted for your Mac password once. When it says "Setup Complete," restart your terminal.*
 
-Using the tool is as simple as calling `yt-cnd` followed by your URL. By default, it will drop a 1080p MP4 file into your `Downloads` folder.
+---
 
-**Standard 1080p Download:**
+## 🚀 Usage & Defaults
+
+| Argument | Description | Default |
+| :--- | :--- | :--- |
+| `url` | The YouTube video or playlist link | **(Required)** |
+| `-o`, `--output` | Destination folder for downloads | `~/Downloads` |
+| `-a`, `--audio` | Download as lossless **WAV** instead of MP4 | Video (MP4) |
+| `--max` | Bypass 1080p cap for **4K/8K** resolution | 1080p |
+| `--limit` | Bandwidth throttle (e.g., `2M`, `5M`, `0` for none) | `5M` (5MB/s) |
+| `--cookies` | Browser to pull session from (`chrome`, `safari`, `brave`) | None |
+
+---
+
+### 📂 Output Structure
+The tool handles your library organization automatically based on the URL type:
+
+* **Single Video:** `~/Downloads/Video Title.mp4`
+* **Playlist:** `~/Downloads/Playlist Name/Video Title.mp4`
+
+---
+
+### Common Workflows
+
+**Standard Download (1080p Proxy):**
 ```bash
-yt-cnd "<YOUR_YOUTUBE_URL>"
+yt-cnd "<YOUR YOUTUBE URL>"
 ```
 
-**Audio-Only (WAV extraction for editing):**
+**Bypass Bot Protection / Age Restrictions:**
+*Ensure you are logged into YouTube in your chosen browser first.*
 ```bash
-yt-cnd "<YOUR_YOUTUBE_URL>" -a
+yt-cnd "<YOUR YOUTUBE URL>" --cookies chrome
 ```
 
-**Maximum Available Resolution (Bypass 1080p cap):**
+**Custom Bandwidth Limit:**
+Limit to 2MB/s to keep the Wi-Fi stable for others (Default is 5MB/s):
 ```bash
-yt-cnd "<YOUR_YOUTUBE_URL>" --max
+yt-cnd "<YOUR YOUTUBE URL>" --limit 2M
 ```
-
-**Custom Output Directory:**
+No limit (Full Speed / "The Nuclear Option"):
 ```bash
-yt-cnd "<YOUR_YOUTUBE_URL>" -o /path/to/custom/folder
+yt-cnd "<YOUR YOUTUBE URL>" --limit 0
 ```
 
-**Download a Playlist:**
-(Automatically detects the playlist, asks for confirmation, and creates a sub-folder)
-```text
-yt-cnd "<YOUR_YOUTUBE_PLAYLIST_URL>"
+**Audio Only (Lossless WAV for Sound Design):**
+```bash
+yt-cnd "<YOUR YOUTUBE URL>" -a
 ```
 
-## 📝 Disclaimer
-Please respect copyright laws and YouTube's Terms of Service. This tool is designed for downloading royalty-free material, creative commons footage, and archival material for fair use documentary editing.
+**Highest Quality (4K/8K for Master Shots):**
+```bash
+yt-cnd "<YOUR YOUTUBE URL>" --max
 ```
+
+**Change the Download Directory:**
+```bash
+yt-cnd "<YOUR YOUTUBE URL>" -o ~/Desktop/MyFilmProject
+```
+
+---
+**Candidates** coming soon. _Hopefully before GTA 6!_ ♘
