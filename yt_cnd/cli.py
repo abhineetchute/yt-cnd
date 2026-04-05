@@ -162,6 +162,7 @@ def main():
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
         print("\n✅ All processing complete!")
+        print("Candidates coming soon. Hopefully before GTA 6! ♘")
     except Exception:
         pass
 
