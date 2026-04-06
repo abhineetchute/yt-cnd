@@ -6,10 +6,8 @@ echo "This will install all necessary background tools. Please wait..."
 # 1. Install Homebrew (Silently)
 if ! command -v brew &> /dev/null; then
     echo "📦 Installing package manager (This may take a few minutes)..."
-    # NONINTERACTIVE=1 stops it from asking the user to press Enter
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
-    # Add brew to path for Apple Silicon Macs
     if [ -d "/opt/homebrew/bin" ]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
     fi
@@ -24,20 +22,38 @@ echo "🐍 Creating isolated Python environment..."
 mkdir -p ~/.yt-cnd-core
 python3 -m venv ~/.yt-cnd-core/venv
 
-# 4. Install your tool directly from GitHub
+# 4. Clone Repo Directly (Bypasses the setup.py requirement)
 echo "📥 Downloading yt-CND from GitHub..."
 ~/.yt-cnd-core/venv/bin/pip install --upgrade pip -q
-~/.yt-cnd-core/venv/bin/pip install git+https://github.com/abhineetchute/yt-cnd.git -q
+rm -rf ~/.yt-cnd-core/repo
+git clone https://github.com/abhineetchute/yt-cnd.git ~/.yt-cnd-core/repo -q
+~/.yt-cnd-core/venv/bin/pip install -r ~/.yt-cnd-core/repo/requirements.txt yt-dlp -q
 
-# 5. Create a global command alias in their zsh profile
-if ! grep -q "yt-cnd" ~/.zshrc; then
-    echo "🔗 Linking command..."
-    echo 'alias yt-cnd="~/.yt-cnd-core/venv/bin/yt-cnd"' >> ~/.zshrc
-fi
+# 5. Create a Native Executable Wrapper
+echo "🔗 Linking command..."
+cat << 'EOF' > ~/.yt-cnd-core/yt-cnd
+#!/bin/bash
+# Pass all arguments directly to the isolated python script
+~/.yt-cnd-core/venv/bin/python ~/.yt-cnd-core/repo/yt_cnd/cli.py "$@"
+EOF
+
+# Make it clickable/executable
+chmod +x ~/.yt-cnd-core/yt-cnd
+
+# 6. Inject into PATH for ALL possible Mac shells
+for rc_file in ~/.zshrc ~/.zprofile ~/.bash_profile ~/.bashrc; do
+    touch "$rc_file"
+    if ! grep -q "$HOME/.yt-cnd-core" "$rc_file"; then
+        echo 'export PATH="$HOME/.yt-cnd-core:$PATH"' >> "$rc_file"
+    fi
+done
 
 echo ""
 echo "✅ Setup Complete!"
-echo "🎉 You can now download videos by typing:"
-echo '   yt-cnd "YOUTUBE_LINK"'
+echo "🎉 The 'yt-cnd' command is fully installed."
 echo ""
-echo "⚠️ IMPORTANT: Restart your terminal right now for the command to work!"
+echo "⚠️ IMPORTANT: To use it immediately, run this command to refresh your terminal:"
+echo "   source ~/.zshrc"
+echo ""
+echo "Then try downloading a video:"
+echo '   yt-cnd "YOUTUBE_LINK"'
