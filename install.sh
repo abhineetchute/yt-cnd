@@ -8,6 +8,7 @@ if ! command -v brew &> /dev/null; then
     echo "📦 Installing package manager (This may take a few minutes)..."
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
+    # Add brew to path for Apple Silicon Macs
     if [ -d "/opt/homebrew/bin" ]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
     fi
@@ -22,38 +23,33 @@ echo "🐍 Creating isolated Python environment..."
 mkdir -p ~/.yt-cnd-core
 python3 -m venv ~/.yt-cnd-core/venv
 
-# 4. Clone Repo Directly (Bypasses the setup.py requirement)
+# 4. Clone the repository safely
 echo "📥 Downloading yt-CND from GitHub..."
-~/.yt-cnd-core/venv/bin/pip install --upgrade pip -q
 rm -rf ~/.yt-cnd-core/repo
 git clone https://github.com/abhineetchute/yt-cnd.git ~/.yt-cnd-core/repo -q
-~/.yt-cnd-core/venv/bin/pip install -r ~/.yt-cnd-core/repo/requirements.txt yt-dlp -q
 
-# 5. Create a Native Executable Wrapper
+# Install required packages (yt-dlp) into the sandbox
+~/.yt-cnd-core/venv/bin/pip install --upgrade pip -q
+if [ -f ~/.yt-cnd-core/repo/requirements.txt ]; then
+    ~/.yt-cnd-core/venv/bin/pip install -r ~/.yt-cnd-core/repo/requirements.txt -q
+else
+    ~/.yt-cnd-core/venv/bin/pip install yt-dlp -q
+fi
+
+# 5. Create a global command alias in their zsh profile
 echo "🔗 Linking command..."
-cat << 'EOF' > ~/.yt-cnd-core/yt-cnd
-#!/bin/bash
-# Pass all arguments directly to the isolated python script
-~/.yt-cnd-core/venv/bin/python ~/.yt-cnd-core/repo/yt_cnd/cli.py "$@"
-EOF
+# Remove the old broken alias if it exists
+if [ -f ~/.zshrc ]; then
+    grep -v 'alias yt-cnd=' ~/.zshrc > ~/.zshrc.tmp && mv ~/.zshrc.tmp ~/.zshrc
+fi
 
-# Make it clickable/executable
-chmod +x ~/.yt-cnd-core/yt-cnd
-
-# 6. Inject into PATH for ALL possible Mac shells
-for rc_file in ~/.zshrc ~/.zprofile ~/.bash_profile ~/.bashrc; do
-    touch "$rc_file"
-    if ! grep -q "$HOME/.yt-cnd-core" "$rc_file"; then
-        echo 'export PATH="$HOME/.yt-cnd-core:$PATH"' >> "$rc_file"
-    fi
-done
+# Find exactly where cli.py is located and link it directly
+CLI_PATH=$(find ~/.yt-cnd-core/repo -name "cli.py" | head -n 1)
+echo "alias yt-cnd=\"~/.yt-cnd-core/venv/bin/python $CLI_PATH\"" >> ~/.zshrc
 
 echo ""
 echo "✅ Setup Complete!"
-echo "🎉 The 'yt-cnd' command is fully installed."
-echo ""
-echo "⚠️ IMPORTANT: To use it immediately, run this command to refresh your terminal:"
-echo "   source ~/.zshrc"
-echo ""
-echo "Then try downloading a video:"
+echo "🎉 You can now download videos by typing:"
 echo '   yt-cnd "YOUTUBE_LINK"'
+echo ""
+echo "⚠️ IMPORTANT: Restart your terminal right now for the command to work!"
